@@ -13,6 +13,13 @@
 #include "spi.h"
 #include "fv.h"
 
+static void update_progress_bar(const char *msg, const int progress)
+{
+	textcolor(RED);
+	printf("\r%s %d%%\n", msg, progress);
+	textcolor(WHITE);
+}
+
 void readspi_callback(UINT32 spibase_addr, UINT32 spi_size, UINT32 spiaddr)
 {
 	static int prev_step = 0;
@@ -32,11 +39,8 @@ void readspi_callback(UINT32 spibase_addr, UINT32 spi_size, UINT32 spiaddr)
 		next_step = next_step + (spi_size / 100);
 		progress++;
 
-		textcolor(RED);
-		printf("\rReading %d%%\n", progress);
-		textcolor(WHITE);
+		update_progress_bar("Reading", progress);
 	}
-	
 }
 
 void writespi_callback(UINT32 spibase_addr, UINT32 spi_size, UINT32 spiaddr)
@@ -58,10 +62,8 @@ void writespi_callback(UINT32 spibase_addr, UINT32 spi_size, UINT32 spiaddr)
 	{
 		next_step = next_step + (spi_size / 100);
 		progress++;
-		
-		textcolor(RED);
-		printf("\rWriting %d%%\n", progress);
-		textcolor(WHITE);
+
+		update_progress_bar("Writing", progress);
 	}
 }
 
@@ -83,13 +85,9 @@ void erasespi_callback(UINT32 spibase_addr, UINT32 spi_size, UINT32 spiaddr)
 	{
 		next_step = next_step + (spi_size / 100);
 		progress++;
-		
-		textcolor(RED);
-		printf("\rErasing %d%%\n", progress);
-		textcolor(WHITE);
+		update_progress_bar("Erasing", progress);
 	}
 }
-
 
 void errorspi_callback(UINT32 spiaddr, UINT16 command)
 {

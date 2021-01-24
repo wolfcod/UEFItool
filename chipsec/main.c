@@ -13,11 +13,7 @@
 #include "chipset.h"
 #include "spi.h"
 #include "fv.h"
-
-void readspi_callback(UINT32 spibase_addr, UINT32 spi_size, UINT32 spiaddr);
-void writespi_callback(UINT32 spibase_addr, UINT32 spi_size, UINT32 spiaddr);
-void erasespi_callback(UINT32 spibase_addr, UINT32 spi_size, UINT32 spiaddr);
-void errorspi_callback(UINT32 spiaddr, UINT16 command);
+#include "callback.h"
 
 int load_file(char *filename, char **fileBuffer, int *fileSize)
 {
@@ -68,7 +64,6 @@ int save_file(const char *filename, char *buffer, int length)
 	}
 
 	handle = fileno(fp);
-	
 
 	fcntl(handle, F_SETFL, __SNBF);	// e che dio ce la mandi buona!
 
@@ -93,7 +88,7 @@ int save_file(const char *filename, char *buffer, int length)
 	}
 
 	printf("Writing %s 100%%\n", filename);
-	
+
 	fclose(fp);
 	return 0;
 }
@@ -109,7 +104,7 @@ ask_choice:
 
 	textbackground(BLUE);
 	textcolor(WHITE);
-	
+
 	printf("\n");
 	printf("\n");
 	printf("i: Install\n");
@@ -152,7 +147,7 @@ ask_choice:
 			result = -1;
 			break;
 	}
-	
+
 	if (result == -1)
 		goto ask_choice;
 
@@ -283,7 +278,7 @@ int install(struct SPI_obj *SPIData, UINTN SPI_REGION, UINTN SPI_LIMIT, UINTN SP
 	// Dumping Firmware
 
 	SPI_LENGTH = (UINT32)(SPI_LIMIT - SPI_REGION + 1);
-	
+
 	save_file(pathBIOS, (char *) SPIBuffer, (int) SPI_LENGTH);
 
 	printf("***********************************************\n");
@@ -345,7 +340,7 @@ int install(struct SPI_obj *SPIData, UINTN SPI_REGION, UINTN SPI_LIMIT, UINTN SP
 	printf("***********************************************\n");
 	printf("Programming from address 0x%x for 0x%x bytes.\n",  VolAddress, VolSize);
 	write_spi(SPIData, VolAddress, VolSize, NewDxeBuffer, &writespi_callback, &errorspi_callback);
-			
+
 	textcolor(YELLOW);
     printf("***********************************************\n");
 	printf("* INFORMATION: Reboot computer........        *\n");
@@ -378,7 +373,7 @@ int uninstall(struct SPI_obj *SPIData, UINTN SPI_REGION, UINTN SPI_LIMIT, UINTN 
 	// Dumping Firmware
 
 	SPI_LENGTH = (UINT32)(SPI_LIMIT - SPI_REGION + 1);
-	
+
 	save_file(pathBIOS, (char *) SPIBuffer, (int) SPI_LENGTH);
 
 	printf("***********************************************\n");
@@ -442,7 +437,7 @@ int uninstall(struct SPI_obj *SPIData, UINTN SPI_REGION, UINTN SPI_LIMIT, UINTN 
 	printf("* WARNING: Reprogramming volume........       *\n");
 	printf("***********************************************\n");
 	write_spi(SPIData, VolAddress, VolSize, NewDxeBuffer, &writespi_callback, &errorspi_callback);
-			
+
 	textcolor(YELLOW);
     printf("***********************************************\n");
 	printf("* INFORMATION: Reboot computer........        *\n");
@@ -473,7 +468,7 @@ int diagnostic(struct SPI_obj *SPIData, UINTN SPI_REGION, UINTN SPI_LIMIT, UINTN
 	// Dumping Firmware
 
 	SPI_LENGTH = (UINT32)(SPI_LIMIT - SPI_REGION + 1);
-	
+
 	save_file(pathBIOS, (char *) SPIBuffer, (int) SPI_LENGTH);
 
 	// So.. free previous buffer!
@@ -501,7 +496,7 @@ int erase_firmware(struct SPI_obj *SPIData, UINTN SPI_REGION, UINTN SPI_LIMIT, U
 	// Dumping Firmware
 
 	SPI_LENGTH = (UINT32)(SPI_LIMIT - SPI_REGION + 1);
-	
+
 	printf("***********************************************\n");
 	printf("* Wait: Identify partition                    *\n");
 	printf("***********************************************\n");
@@ -523,13 +518,12 @@ int erase_firmware(struct SPI_obj *SPIData, UINTN SPI_REGION, UINTN SPI_LIMIT, U
 	volume = ptr_to_volume(SPIBuffer, SPI_LENGTH, VolIndex);
 	VolSize = volume_size(SPIBuffer, SPI_LENGTH, VolIndex);
 
-	
 	printf("***********************************************\n");
 	printf("* WARNING: Erasing volume........             *\n");
 	printf("***********************************************\n");
 	printf("Erasing from address 0x%x for 0x%x bytes.\n",  VolAddress, VolSize);
 	erase_spi(SPIData, VolAddress, VolSize, &erasespi_callback, &errorspi_callback);
-		
+
 	textcolor(YELLOW);
     printf("***********************************************\n");
 	printf("* INFORMATION: Bricked computer..             *\n");
@@ -561,8 +555,6 @@ int main(int argc, char *argv[])
 	}
 
 	clrscr();
-	
-	//printf("    **** ][ ****\n");
 
 	if (ChipsetInit() != RETURN_SUCCESS)
 	{
@@ -595,7 +587,7 @@ int main(int argc, char *argv[])
 	SPI_REGION = SPI_LIMIT = SPI_FREG = 0;
 
 	get_SPI_region((struct SPI_obj *) SPIData, PCH_RCBA_SPI_FREG1_BIOS, &SPI_REGION, &SPI_LIMIT, &SPI_FREG);
-	
+
 	printf("[Main] SPI %08x %08x %08x\n", SPI_REGION, SPI_LIMIT, SPI_FREG);
 
 	result = 0;
@@ -616,7 +608,6 @@ int main(int argc, char *argv[])
 			break;
 		case 5:
 			//erase_firmware((struct SPI_obj *) SPIData, SPI_REGION, SPI_LIMIT, SPI_FREG);
-
 			break;
 		default:
 			break;
